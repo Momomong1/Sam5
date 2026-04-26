@@ -7,34 +7,32 @@
         body, html { width: 100%; height: 100%; margin: 0; padding: 0; background-color: #000; color: white; text-align: center; overflow: hidden; }
         #canvas { width: 100%; height: 100%; border: none; display: block; }
         #loading-text { margin-top: 50px; font-size: 20px; font-family: sans-serif; }
-        
-        /* 에뮬레이터를 속이기 위한 가짜 부품들을 화면에서 완전히 숨김 */
-        #hidden-controls { display: none; }
     </style>
 </head>
 <body>
-    <div id="loading-text">에뮬레이터 구동 준비 중... 화면을 한 번 클릭하고 잠시만 기다려주세요.</div>
-    
+    <div id="loading-text">에뮬레이터 구동 준비 중... 잠시만 기다려주세요.</div>
     <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
 
-    <div id="hidden-controls">
-        <button id="runBtn"></button>
-        <button id="fullScreenBtn"></button>
-        <input id="uploadBtn" type="file">
-        <input id="file" type="file">
-        <input id="openfile" type="file">
-        <button id="extractBtn"></button>
-        <input type="checkbox" id="SoundToggle" checked>
-        <div id="status"></div>
-        <progress id="progress" value="0" max="100"></progress>
-    </div>
-
     <script>
+        var _originalGetElement = document.getElementById;
+        document.getElementById = function(id) {
+            var el = _originalGetElement.call(document, id);
+            if (el) return el; // 원래 부품이 있으면 통과
+            
+            // 부품이 없으면 즉석에서 투명 부품(Dummy)을 찍어내서 에러를 막음
+            var dummy = document.createElement('div');
+            dummy.id = id;
+            dummy.style.display = 'none';
+            dummy.checked = true; // 체크박스인 척
+            dummy.value = "";     // 파일입력창인 척
+            document.body.appendChild(dummy);
+            return dummy;
+        };
+
         var loadingText = document.getElementById('loading-text');
 
         var Module = {
             canvas: document.getElementById('canvas'),
-            // 로딩이 끝나면 문구를 숨기는 기능
             setStatus: function(text) {
                 if (text === "") {
                     loadingText.style.display = 'none'; 
