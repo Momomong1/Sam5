@@ -2,66 +2,147 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>삼국지 5 황금판 - 웹 플레이</title>
+    <title>삼국지5 황금판 웹 실행</title>
+
     <style>
-        body, html { width: 100%; height: 100%; margin: 0; padding: 0; background-color: #000; color: white; text-align: center; overflow: hidden; }
-        #canvas { width: 100%; height: 100%; border: none; display: block; }
-        #ui { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; font-family: sans-serif; }
-        
-        /* 스크립트를 속이기 위한 가짜 부품들을 화면에서 완벽하게 숨김 */
-        #hidden-controls { display: none; }
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: black;
+            overflow: hidden;
+            color: white;
+            font-family: sans-serif;
+        }
+
+        #canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #loadingUI {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 999;
+            text-align: center;
+        }
+
+        /* BoxedWine 필수 요소 숨김 */
+        #hidden-controls {
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <div id="ui">
-        <h2>에뮬레이터 및 게임 파일 로딩 중...</h2>
-        <p>잠시만 기다려주세요 (화면이 멈춘 것 같아도 다운로드 중입니다)</p>
+
+    <!-- 로딩 화면 -->
+    <div id="loadingUI">
+        <h2>삼국지5 황금판 로딩 중...</h2>
+        <p>최초 실행 시 시간이 조금 걸릴 수 있습니다.</p>
     </div>
 
+    <!-- 게임 화면 -->
+    <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+
+    <!-- BoxedWine가 요구하는 숨김 요소들 -->
     <div id="hidden-controls">
+
         <button id="runBtn"></button>
         <button id="fullScreenBtn"></button>
+        <button id="extractBtn"></button>
+
+        <!-- 대소문자 문제 방지 -->
         <input type="checkbox" id="SoundToggle" checked>
+        <input type="checkbox" id="soundToggle" checked>
+
         <input type="file" id="uploadBtn">
         <input type="file" id="file">
         <input type="file" id="openfile">
-        <button id="extractBtn"></button>
-        <div id="status"></div>
-        <progress id="progress" value="0" max="100"></progress>
-    </div>
 
-    <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+        <div id="status"></div>
+        <div id="output"></div>
+        <div id="spinner"></div>
+
+        <progress id="progress" value="0" max="100"></progress>
+
+        <!-- 드래그앤드롭 필수 -->
+        <div id="dropzone"></div>
+
+    </div>
 
     <script>
         var Module = {
-            canvas: document.getElementById('canvas'),
-            // 미러 서버의 Emscripten 버그 강제 패치
-            addRunDependency: function() {},
-            removeRunDependency: function() {},
+            canvas: document.getElementById("canvas"),
+
+            print: function(text) {
+                console.log(text);
+            },
+
+            printErr: function(text) {
+                console.error(text);
+            },
+
+            setStatus: function(text) {
+                console.log("STATUS:", text);
+            },
+
             locateFile: function(path) {
-                if (path.endsWith('.wasm')) return "https://kevodwyer.github.io/boxedwine-examples/" + path;
+                // wasm / data 파일 모두 CDN에서 로드
+                if (
+                    path.endsWith(".wasm") ||
+                    path.endsWith(".data")
+                ) {
+                    return "https://kevodwyer.github.io/boxedwine-examples/" + path;
+                }
+
                 return path;
             }
         };
 
-        // 대소문자 오류 수정판 (소문자 u, p)
         var BoxedWineConfig = {
-            urlToAppZipFile: "sam5.zip", 
-            programExecutable: "SAM5GOLD25_KO_1.10.exe", 
-            urlToBaseZipFile: "https://kevodwyer.github.io/boxedwine-examples/boxedwine.zip", 
-            isAutoRun: true 
+            // 본인 서버에 있는 게임 zip
+            urlToAppZipFile: "sam5.zip",
+
+            // zip 내부 exe 이름 정확히 입력
+            programExecutable: "SAM5GOLD25_KO_1.10.exe",
+
+            // BoxedWine 기본 파일
+            urlToBaseZipFile:
+                "https://kevodwyer.github.io/boxedwine-examples/boxedwine.zip",
+
+            autoRun: true
         };
     </script>
-    
+
+    <!-- BoxedWine -->
     <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine.js"></script>
     <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine-shell.js"></script>
-    
+
     <script>
-        // 게임이 켜질 즈음 안내 문구 숨기기 (약 7초 후)
-        setTimeout(function() {
-            var ui = document.getElementById("ui");
-            if(ui) ui.style.display = "none";
-        }, 7000);
+        // 로딩 화면 숨기기
+        setTimeout(function () {
+            const loadingUI = document.getElementById("loadingUI");
+
+            if (loadingUI) {
+                loadingUI.style.display = "none";
+            }
+        }, 8000);
+
+        // 에러 로그 확인용
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error("전역 에러:", {
+                message,
+                source,
+                lineno,
+                colno,
+                error
+            });
+        };
     </script>
+
 </body>
 </html>
