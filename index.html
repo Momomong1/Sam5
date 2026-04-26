@@ -6,49 +6,40 @@
     <style>
         body, html { width: 100%; height: 100%; margin: 0; padding: 0; background-color: #000; color: white; text-align: center; overflow: hidden; }
         #canvas { width: 100%; height: 100%; border: none; display: block; }
-        #loading-text { margin-top: 50px; font-size: 20px; font-family: sans-serif; }
+        #ui { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; font-family: sans-serif; }
+        /* 에러 방지용 필수 버튼 숨김 */
+        #hidden-btns { display: none; }
     </style>
 </head>
 <body>
-    <div id="loading-text">에뮬레이터 구동 준비 중... 잠시만 기다려주세요.</div>
+    <div id="ui">
+        <h2>에뮬레이터 및 게임 파일 로딩 중...</h2>
+        <p>잠시만 기다려주세요 (화면이 멈춘 것 같아도 다운로드 중입니다)</p>
+    </div>
+
+    <div id="hidden-btns">
+        <button id="runBtn"></button>
+        <button id="fullScreenBtn"></button>
+    </div>
+
     <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
 
     <script>
-        var _originalGetElement = document.getElementById;
-        document.getElementById = function(id) {
-            var el = _originalGetElement.call(document, id);
-            if (el) return el; // 원래 부품이 있으면 통과
-            
-            // 부품이 없으면 즉석에서 투명 부품(Dummy)을 찍어내서 에러를 막음
-            var dummy = document.createElement('div');
-            dummy.id = id;
-            dummy.style.display = 'none';
-            dummy.checked = true; // 체크박스인 척
-            dummy.value = "";     // 파일입력창인 척
-            document.body.appendChild(dummy);
-            return dummy;
-        };
-
-        var loadingText = document.getElementById('loading-text');
-
         var Module = {
             canvas: document.getElementById('canvas'),
-            setStatus: function(text) {
-                if (text === "") {
-                    loadingText.style.display = 'none'; 
-                } else if (text) {
-                    loadingText.innerHTML = text;
-                }
-            },
+            // 미러 서버의 Emscripten 버그 강제 패치 (에러 무시)
+            addRunDependency: function() {},
+            removeRunDependency: function() {},
             locateFile: function(path) {
                 if (path.endsWith('.wasm')) return "https://kevodwyer.github.io/boxedwine-examples/" + path;
                 return path;
             }
         };
 
+        // ★ 핵심 해결: 대소문자 오류 완벽 수정 (소문자로 시작) ★
         var BoxedWineConfig = {
-            URLToAppZipFile: "sam5.zip", 
-            ProgramExecutable: "SAM5GOLD25_KO_1.10.exe", 
+            urlToAppZipFile: "sam5.zip", 
+            programExecutable: "SAM5GOLD25_KO_1.10.exe", 
             urlToBaseZipFile: "https://kevodwyer.github.io/boxedwine-examples/boxedwine.zip", 
             isAutoRun: true 
         };
@@ -56,5 +47,13 @@
     
     <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine.js"></script>
     <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine-shell.js"></script>
+    
+    <script>
+        // 게임이 켜질 즈음 안내 문구 숨기기 (약 7초 후)
+        setTimeout(function() {
+            var ui = document.getElementById("ui");
+            if(ui) ui.style.display = "none";
+        }, 7000);
+    </script>
 </body>
 </html>
