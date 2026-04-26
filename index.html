@@ -6,30 +6,41 @@
     <style>
         body, html { width: 100%; height: 100%; margin: 0; padding: 0; background-color: #000; color: white; text-align: center; overflow: hidden; }
         #canvas { width: 100%; height: 100%; border: none; display: block; }
-        #status { margin-top: 50px; font-size: 20px; font-family: sans-serif; }
+        #loading-text { margin-top: 50px; font-size: 20px; font-family: sans-serif; }
+        
+        /* 에뮬레이터를 속이기 위한 가짜 부품들을 화면에서 완전히 숨김 */
+        #hidden-controls { display: none; }
     </style>
 </head>
 <body>
-    <div id="status">에뮬레이터 및 게임 파일 다운로드 중... 잠시만 기다려주세요.</div>
+    <div id="loading-text">에뮬레이터 구동 준비 중... 화면을 한 번 클릭하고 잠시만 기다려주세요.</div>
     
     <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
 
-    <div style="display: none;">
-        <button id="btn-start"></button>
-        <button id="btn-fullscreen"></button>
+    <div id="hidden-controls">
         <button id="runBtn"></button>
         <button id="fullScreenBtn"></button>
+        <input id="uploadBtn" type="file">
+        <input id="file" type="file">
+        <input id="openfile" type="file">
+        <button id="extractBtn"></button>
+        <input type="checkbox" id="SoundToggle" checked>
+        <div id="status"></div>
         <progress id="progress" value="0" max="100"></progress>
     </div>
 
     <script>
-        var statusElement = document.getElementById('status');
+        var loadingText = document.getElementById('loading-text');
+
         var Module = {
             canvas: document.getElementById('canvas'),
             // 로딩이 끝나면 문구를 숨기는 기능
             setStatus: function(text) {
-                if (text) statusElement.innerHTML = text;
-                if (text === "") statusElement.style.display = 'none'; 
+                if (text === "") {
+                    loadingText.style.display = 'none'; 
+                } else if (text) {
+                    loadingText.innerHTML = text;
+                }
             },
             locateFile: function(path) {
                 if (path.endsWith('.wasm')) return "https://kevodwyer.github.io/boxedwine-examples/" + path;
