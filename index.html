@@ -10,7 +10,7 @@
             height: 100%;
             margin: 0;
             padding: 0;
-            background: black;
+            background: #000;
             overflow: hidden;
             color: white;
             font-family: sans-serif;
@@ -27,11 +27,11 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 999;
             text-align: center;
+            z-index: 999;
         }
 
-        /* BoxedWine 필수 요소 숨김 */
+        /* BoxedWine 내부 필수 요소 숨김 */
         #hidden-controls {
             display: none;
         }
@@ -42,20 +42,20 @@
     <!-- 로딩 화면 -->
     <div id="loadingUI">
         <h2>삼국지5 황금판 로딩 중...</h2>
-        <p>최초 실행 시 시간이 조금 걸릴 수 있습니다.</p>
+        <p>최초 실행 시 시간이 다소 걸릴 수 있습니다.</p>
     </div>
 
     <!-- 게임 화면 -->
     <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
 
-    <!-- BoxedWine가 요구하는 숨김 요소들 -->
+    <!-- BoxedWine 필수 DOM 요소 -->
     <div id="hidden-controls">
 
         <button id="runBtn"></button>
         <button id="fullScreenBtn"></button>
         <button id="extractBtn"></button>
 
-        <!-- 대소문자 문제 방지 -->
+        <!-- 대소문자 대응 -->
         <input type="checkbox" id="SoundToggle" checked>
         <input type="checkbox" id="soundToggle" checked>
 
@@ -69,7 +69,7 @@
 
         <progress id="progress" value="0" max="100"></progress>
 
-        <!-- 드래그앤드롭 필수 -->
+        <!-- drag/drop 필수 -->
         <div id="dropzone"></div>
 
     </div>
@@ -91,7 +91,6 @@
             },
 
             locateFile: function(path) {
-                // wasm / data 파일 모두 CDN에서 로드
                 if (
                     path.endsWith(".wasm") ||
                     path.endsWith(".data")
@@ -104,26 +103,26 @@
         };
 
         var BoxedWineConfig = {
-            // 본인 서버에 있는 게임 zip
+            // 동일 경로에 있는 게임 zip
             urlToAppZipFile: "sam5.zip",
 
-            // zip 내부 exe 이름 정확히 입력
+            // zip 내부 exe 파일명 정확히 입력
             programExecutable: "SAM5GOLD25_KO_1.10.exe",
 
             // BoxedWine 기본 파일
             urlToBaseZipFile:
                 "https://kevodwyer.github.io/boxedwine-examples/boxedwine.zip",
 
-            autoRun: true
+            isAutoRun: true
         };
     </script>
 
-    <!-- BoxedWine -->
+    <!-- BoxedWine 로드 -->
     <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine.js"></script>
     <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine-shell.js"></script>
 
     <script>
-        // 로딩 화면 숨기기
+        // 로딩 UI 제거
         setTimeout(function () {
             const loadingUI = document.getElementById("loadingUI");
 
@@ -132,17 +131,19 @@
             }
         }, 8000);
 
-        // 에러 로그 확인용
+        // 전역 에러 확인용
         window.onerror = function(message, source, lineno, colno, error) {
             console.error("전역 에러:", {
-                message,
-                source,
-                lineno,
-                colno,
-                error
+                message: message,
+                source: source,
+                lineno: lineno,
+                colno: colno,
+                error: error
             });
         };
     </script>
 
+</body>
+</html>
 </body>
 </html>
