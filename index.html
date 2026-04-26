@@ -4,51 +4,34 @@
     <meta charset="UTF-8">
     <title>삼국지 5 황금판 - 웹 플레이</title>
     <style>
-        /* 화면을 꽉 채우고 스크롤바를 없애는 스타일 */
-        body, html { 
-            width: 100%; 
-            height: 100%; 
-            margin: 0; 
-            padding: 0; 
-            background-color: #000; 
-            overflow: hidden; 
-        }
-        #canvas { 
-            width: 100%; 
-            height: 100%; 
-            border: none; 
-            display: block;
-        }
+        body, html { width: 100%; height: 100%; margin: 0; padding: 0; background-color: #000; overflow: hidden; }
+        #canvas { width: 100%; height: 100%; border: none; display: block; }
     </style>
 </head>
 <body>
     <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
 
     <script>
-        // 에뮬레이터 핵심 엔진(wasm) 경로 설정
         var Module = {
             locateFile: function(path) {
                 if (path.endsWith('.wasm')) {
-                    return "https://boxedwine.org/" + path;
+                    // 고장난 공식 서버 대신 안정적인 깃허브 미러 서버로 우회
+                    return "https://kevodwyer.github.io/boxedwine-examples/" + path;
                 }
                 return path;
             }
         };
 
-        // 가상 윈도우 에뮬레이터 세팅
         var BoxedWineConfig = {
-            // ▼ 압축 파일 연결 부분 (옵션에 따라 수정하세요!) ▼
             URLToAppZipFile: "sam5.zip", 
-            
-            // ▼ 삼국지 5 황금판 실행 파일명 (사진과 동일하게 세팅 완료) ▼
             ProgramExecutable: "SAM5GOLD25_KO_1.10.exe", 
-            
-            urlToBaseZipFile: "https://boxedwine.org/boxedwine.zip", // 가상 윈도우 시스템 (건드리지 마세요)
-            isAutoRun: true // 접속 시 자동 실행
+            // 윈도우 가상 시스템 파일도 미러 서버에서 다운로드
+            urlToBaseZipFile: "https://kevodwyer.github.io/boxedwine-examples/boxedwine.zip", 
+            isAutoRun: true 
         };
     </script>
     
-    <script src="https://boxedwine.org/boxedwine.js"></script>
-    <script src="https://boxedwine.org/boxedwine-shell.js"></script>
+    <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine.js"></script>
+    <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine-shell.js"></script>
 </body>
 </html>
