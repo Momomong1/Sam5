@@ -7,8 +7,9 @@
         body, html { width: 100%; height: 100%; margin: 0; padding: 0; background-color: #000; color: white; text-align: center; overflow: hidden; }
         #canvas { width: 100%; height: 100%; border: none; display: block; }
         #ui { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; font-family: sans-serif; }
-        /* 에러 방지용 필수 버튼 숨김 */
-        #hidden-btns { display: none; }
+        
+        /* 스크립트를 속이기 위한 가짜 부품들을 화면에서 완벽하게 숨김 */
+        #hidden-controls { display: none; }
     </style>
 </head>
 <body>
@@ -17,9 +18,16 @@
         <p>잠시만 기다려주세요 (화면이 멈춘 것 같아도 다운로드 중입니다)</p>
     </div>
 
-    <div id="hidden-btns">
+    <div id="hidden-controls">
         <button id="runBtn"></button>
         <button id="fullScreenBtn"></button>
+        <input type="checkbox" id="SoundToggle" checked>
+        <input type="file" id="uploadBtn">
+        <input type="file" id="file">
+        <input type="file" id="openfile">
+        <button id="extractBtn"></button>
+        <div id="status"></div>
+        <progress id="progress" value="0" max="100"></progress>
     </div>
 
     <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
@@ -27,7 +35,7 @@
     <script>
         var Module = {
             canvas: document.getElementById('canvas'),
-            // 미러 서버의 Emscripten 버그 강제 패치 (에러 무시)
+            // 미러 서버의 Emscripten 버그 강제 패치
             addRunDependency: function() {},
             removeRunDependency: function() {},
             locateFile: function(path) {
@@ -36,7 +44,7 @@
             }
         };
 
-        // ★ 핵심 해결: 대소문자 오류 완벽 수정 (소문자로 시작) ★
+        // 대소문자 오류 수정판 (소문자 u, p)
         var BoxedWineConfig = {
             urlToAppZipFile: "sam5.zip", 
             programExecutable: "SAM5GOLD25_KO_1.10.exe", 
