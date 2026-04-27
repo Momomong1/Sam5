@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>삼국지5 황금판 웹 실행</title>
-
     <style>
         html, body {
             width: 100%;
@@ -39,109 +38,76 @@
 </head>
 <body>
 
-    <!-- 로딩 화면 -->
     <div id="loadingUI">
         <h2>삼국지5 황금판 로딩 중...</h2>
         <p>최초 실행 시 시간이 다소 걸릴 수 있습니다.</p>
     </div>
 
-    <!-- 게임 화면 -->
     <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
 
-    <!-- BoxedWine 필수 DOM 요소 -->
     <div id="hidden-controls">
-
         <button id="runBtn"></button>
         <button id="fullScreenBtn"></button>
         <button id="extractBtn"></button>
-
-        <!-- 대소문자 대응 -->
         <input type="checkbox" id="SoundToggle" checked>
         <input type="checkbox" id="soundToggle" checked>
-
         <input type="file" id="uploadBtn">
         <input type="file" id="file">
         <input type="file" id="openfile">
-
         <div id="status"></div>
         <div id="output"></div>
         <div id="spinner"></div>
-
         <progress id="progress" value="0" max="100"></progress>
-
-        <!-- drag/drop 필수 -->
         <div id="dropzone"></div>
-
     </div>
 
     <script>
         var Module = {
             canvas: document.getElementById("canvas"),
+            
+            // ★ 핵심: 서버 버그를 고치는 마법의 패치 (이 부분이 빠져있었습니다!) ★
+            addRunDependency: function() {},
+            removeRunDependency: function() {},
 
             print: function(text) {
                 console.log(text);
             },
-
             printErr: function(text) {
                 console.error(text);
             },
-
             setStatus: function(text) {
                 console.log("STATUS:", text);
             },
-
             locateFile: function(path) {
-                if (
-                    path.endsWith(".wasm") ||
-                    path.endsWith(".data")
-                ) {
+                if (path.endsWith(".wasm") || path.endsWith(".data")) {
                     return "https://kevodwyer.github.io/boxedwine-examples/" + path;
                 }
-
                 return path;
             }
         };
 
         var BoxedWineConfig = {
-            // 동일 경로에 있는 게임 zip
             urlToAppZipFile: "sam5.zip",
-
-            // zip 내부 exe 파일명 정확히 입력
             programExecutable: "SAM5GOLD25_KO_1.10.exe",
-
-            // BoxedWine 기본 파일
-            urlToBaseZipFile:
-                "https://kevodwyer.github.io/boxedwine-examples/boxedwine.zip",
-
+            urlToBaseZipFile: "https://kevodwyer.github.io/boxedwine-examples/boxedwine.zip",
             isAutoRun: true
         };
     </script>
 
-    <!-- BoxedWine 로드 -->
     <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine.js"></script>
     <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine-shell.js"></script>
 
     <script>
-        // 로딩 UI 제거
+        // 로딩 UI 제거 (8초 후)
         setTimeout(function () {
             const loadingUI = document.getElementById("loadingUI");
-
             if (loadingUI) {
                 loadingUI.style.display = "none";
             }
         }, 8000);
-
-        // 전역 에러 확인용
-        window.onerror = function(message, source, lineno, colno, error) {
-            console.error("전역 에러:", {
-                message: message,
-                source: source,
-                lineno: lineno,
-                colno: colno,
-                error: error
-            });
-        };
     </script>
+</body>
+</html>
 
 </body>
 </html>
