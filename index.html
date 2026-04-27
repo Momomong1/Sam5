@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>삼국지5 황금판 - 정식 서버 구동</title>
+    <title>삼국지5 황금판 - Final Secure Edition</title>
     <style>
         html, body { width: 100%; height: 100%; margin: 0; padding: 0; background: #000; overflow: hidden; color: white; font-family: sans-serif; }
         #canvas { width: 100%; height: 100%; display: block; }
@@ -12,8 +12,8 @@
 </head>
 <body>
     <div id="loadingUI">
-        <h2 id="loadingText">데이터 수신 중...</h2>
-        <p>https://retro-sam5.duckdns.org 서버 연결 완료</p>
+        <h2 id="loadingText">데이터 수신 준비 중...</h2>
+        <p>https://retro-sam5.duckdns.org 연결 시도</p>
     </div>
 
     <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
@@ -27,39 +27,7 @@
     </div>
 
     <script>
-        // 1. [Scenario A 적용] 엔진 로드 전에 Module을 완벽하게 정의합니다.
-        var myRunDependencies = 0;
-        window.Module = {
-            canvas: document.getElementById("canvas"),
-            noInitialRun: true,
-            
-            // 엔진이 찾고 있는 바로 그 함수들을 미리 '선점'해서 정의합니다.
-            addRunDependency: function(id) { 
-                myRunDependencies++; 
-                console.log("[엔진] 종속성 추가: " + id);
-            },
-            removeRunDependency: function(id) { 
-                myRunDependencies--;
-                console.log("[엔진] 종속성 제거: " + id);
-                if (myRunDependencies === 0) {
-                    document.getElementById("loadingUI").style.display = "none";
-                    // 모든 파일 로딩 후 메인 실행
-                    setTimeout(function() {
-                        if (Module.callMain) {
-                            Module.callMain(Module.arguments);
-                        }
-                    }, 500);
-                }
-            },
-            locateFile: function(path) {
-                return "https://kevodwyer.github.io/boxedwine-examples/" + path;
-            },
-            onRuntimeInitialized: function() {
-                console.log("[시스템] Wasm 런타임 초기화 완료");
-            }
-        };
-
-        // 2. 엔진이 설정을 참조할 수 있도록 전역 객체 세팅
+        // 1. 전역 설정 선언
         window.BoxedWineConfig = {
             urlToAppZipFile: "https://retro-sam5.duckdns.org/sam5.zip",
             programExecutable: "SAM5GOLD25_KO_1.10.exe",
@@ -67,16 +35,53 @@
             isAutoRun: true
         };
 
-        // 3. 엔진 내부 변수인 'Config'가 생성되면 우리 주소를 강제로 주입하는 보조 장치
-        var checkInterval = setInterval(function() {
+        var myRunDependencies = 0;
+
+        // 2. [핵심] Module 객체를 수정 불가능한 상태로 강력하게 정의합니다.
+        // 엔진이 내부에서 "var Module = ..."을 시도해도 덮어씌워지지 않게 방어합니다.
+        if (!window.Module) {
+            Object.defineProperty(window, 'Module', {
+                value: {
+                    canvas: document.getElementById("canvas"),
+                    noInitialRun: true,
+                    addRunDependency: function(id) { 
+                        myRunDependencies++; 
+                        console.log("[로딩 시작] " + id);
+                    },
+                    removeRunDependency: function(id) { 
+                        myRunDependencies--;
+                        console.log("[로딩 완료] " + id);
+                        if (myRunDependencies <= 0) {
+                            document.getElementById("loadingUI").style.display = "none";
+                            setTimeout(function() { if (Module.callMain) Module.callMain(Module.arguments); }, 500);
+                        }
+                    },
+                    locateFile: function(path) {
+                        return "https://kevodwyer.github.io/boxedwine-examples/" + path;
+                    },
+                    print: console.log,
+                    printErr: console.error
+                },
+                configurable: false, // 삭제 불가
+                writable: true       // 내용은 수정 가능하게 (엔진이 나중에 필요한 함수를 채울 수 있도록)
+            });
+        }
+
+        // 3. 엔진 내부 Config 강제 매핑 루프
+        var forceConfigLoop = setInterval(function() {
             if (typeof Config !== 'undefined') {
                 Config.urlToAppZipFile = window.BoxedWineConfig.urlToAppZipFile;
                 Config.programExecutable = window.BoxedWineConfig.programExecutable;
                 Config.isAutoRun = true;
-                console.log("[성공] 서버 데이터 주소 강제 매핑 완료");
-                clearInterval(checkInterval);
+                // 에러가 났던 addRunDependency가 유실되었을 경우를 대비해 다시 한 번 주입
+                if (typeof Module.addRunDependency !== 'function') {
+                    Module.addRunDependency = function(id) { myRunDependencies++; };
+                    Module.removeRunDependency = function(id) { myRunDependencies--; };
+                }
+                console.log("[시스템] 모든 설정 강제 주입 완료");
+                clearInterval(forceConfigLoop);
             }
-        }, 50);
+        }, 100);
     </script>
 
     <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine.js"></script>
