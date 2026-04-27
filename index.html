@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>삼국지5 황금판 웹 실행 - Final Fix</title>
+    <title>삼국지5 황금판 - 정식 서버 구동</title>
     <style>
         html, body { width: 100%; height: 100%; margin: 0; padding: 0; background: #000; overflow: hidden; color: white; font-family: sans-serif; }
         #canvas { width: 100%; height: 100%; display: block; }
@@ -12,8 +12,8 @@
 </head>
 <body>
     <div id="loadingUI">
-        <h2 id="loadingText">클라우드 서버 연결 중...</h2>
-        <p>https://retro-sam5.duckdns.org 에서 데이터를 가져오고 있습니다.</p>
+        <h2 id="loadingText">데이터 수신 중...</h2>
+        <p>https://retro-sam5.duckdns.org 서버 연결 완료</p>
     </div>
 
     <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
@@ -27,7 +27,39 @@
     </div>
 
     <script>
-        // 엔진이 실행되기 전에 설정을 미리 '강제 고정'합니다.
+        // 1. [Scenario A 적용] 엔진 로드 전에 Module을 완벽하게 정의합니다.
+        var myRunDependencies = 0;
+        window.Module = {
+            canvas: document.getElementById("canvas"),
+            noInitialRun: true,
+            
+            // 엔진이 찾고 있는 바로 그 함수들을 미리 '선점'해서 정의합니다.
+            addRunDependency: function(id) { 
+                myRunDependencies++; 
+                console.log("[엔진] 종속성 추가: " + id);
+            },
+            removeRunDependency: function(id) { 
+                myRunDependencies--;
+                console.log("[엔진] 종속성 제거: " + id);
+                if (myRunDependencies === 0) {
+                    document.getElementById("loadingUI").style.display = "none";
+                    // 모든 파일 로딩 후 메인 실행
+                    setTimeout(function() {
+                        if (Module.callMain) {
+                            Module.callMain(Module.arguments);
+                        }
+                    }, 500);
+                }
+            },
+            locateFile: function(path) {
+                return "https://kevodwyer.github.io/boxedwine-examples/" + path;
+            },
+            onRuntimeInitialized: function() {
+                console.log("[시스템] Wasm 런타임 초기화 완료");
+            }
+        };
+
+        // 2. 엔진이 설정을 참조할 수 있도록 전역 객체 세팅
         window.BoxedWineConfig = {
             urlToAppZipFile: "https://retro-sam5.duckdns.org/sam5.zip",
             programExecutable: "SAM5GOLD25_KO_1.10.exe",
@@ -35,41 +67,16 @@
             isAutoRun: true
         };
 
-        var myRunDependencies = 0;
-        var Module = {
-            canvas: document.getElementById("canvas"),
-            noInitialRun: true,
-            
-            // 엔진의 필수 함수들을 미리 정의해서 에러를 원천 차단합니다.
-            addRunDependency: function(id) { 
-                myRunDependencies++; 
-                console.log("[로딩] " + id);
-            },
-            removeRunDependency: function(id) { 
-                myRunDependencies--;
-                if (myRunDependencies === 0) {
-                    document.getElementById("loadingUI").style.display = "none";
-                    console.log("[시스템] 로딩 완료! 게임을 시작합니다.");
-                    setTimeout(function() { if (Module.callMain) Module.callMain(Module.arguments); }, 500);
-                }
-            },
-            locateFile: function(path) {
-                return "https://kevodwyer.github.io/boxedwine-examples/" + path;
-            }
-        };
-
-        // 엔진이 설정을 못 찾고 지나가는 것을 방지하기 위해 강제로 덮어씌웁니다.
-        function forceConfig() {
+        // 3. 엔진 내부 변수인 'Config'가 생성되면 우리 주소를 강제로 주입하는 보조 장치
+        var checkInterval = setInterval(function() {
             if (typeof Config !== 'undefined') {
                 Config.urlToAppZipFile = window.BoxedWineConfig.urlToAppZipFile;
                 Config.programExecutable = window.BoxedWineConfig.programExecutable;
                 Config.isAutoRun = true;
-                console.log("[설정] 클라우드 주소 강제 주입 성공!");
-            } else {
-                setTimeout(forceConfig, 100);
+                console.log("[성공] 서버 데이터 주소 강제 매핑 완료");
+                clearInterval(checkInterval);
             }
-        }
-        forceConfig();
+        }, 50);
     </script>
 
     <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine.js"></script>
