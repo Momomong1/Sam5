@@ -30,7 +30,6 @@
             z-index: 999;
         }
 
-        /* BoxedWine 내부 필수 요소 숨김 */
         #hidden-controls {
             display: none;
         }
@@ -64,20 +63,9 @@
     <script>
         var Module = {
             canvas: document.getElementById("canvas"),
-            
-            // ★ 핵심: 서버 버그를 고치는 마법의 패치 (이 부분이 빠져있었습니다!) ★
-            addRunDependency: function() {},
-            removeRunDependency: function() {},
-
-            print: function(text) {
-                console.log(text);
-            },
-            printErr: function(text) {
-                console.error(text);
-            },
-            setStatus: function(text) {
-                console.log("STATUS:", text);
-            },
+            print: function(text) { console.log(text); },
+            printErr: function(text) { console.error(text); },
+            setStatus: function(text) { console.log("STATUS:", text); },
             locateFile: function(path) {
                 if (path.endsWith(".wasm") || path.endsWith(".data")) {
                     return "https://kevodwyer.github.io/boxedwine-examples/" + path;
@@ -95,10 +83,19 @@
     </script>
 
     <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine.js"></script>
+
+    <script>
+        if (typeof Module.addRunDependency !== "function") {
+            Module.addRunDependency = function(id) { /* 에러 방지용 빈 함수 */ };
+        }
+        if (typeof Module.removeRunDependency !== "function") {
+            Module.removeRunDependency = function(id) { /* 에러 방지용 빈 함수 */ };
+        }
+    </script>
+
     <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine-shell.js"></script>
 
     <script>
-        // 로딩 UI 제거 (8초 후)
         setTimeout(function () {
             const loadingUI = document.getElementById("loadingUI");
             if (loadingUI) {
@@ -106,10 +103,5 @@
             }
         }, 8000);
     </script>
-</body>
-</html>
-
-</body>
-</html>
 </body>
 </html>
