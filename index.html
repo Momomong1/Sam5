@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>삼국지5 황금판 웹 실행 - Cloud Edition</title>
+    <title>삼국지5 황금판 웹 실행 - Final Fix</title>
     <style>
         html, body { width: 100%; height: 100%; margin: 0; padding: 0; background: #000; overflow: hidden; color: white; font-family: sans-serif; }
         #canvas { width: 100%; height: 100%; display: block; }
@@ -12,81 +12,64 @@
 </head>
 <body>
     <div id="loadingUI">
-        <h2>삼국지5 황금판 로딩 중...</h2>
-        <p>나만의 클라우드 서버에서 대용량 데이터를 불러오고 있습니다.</p>
-        <p>최초 실행 시 시간이 다소 걸릴 수 있습니다.</p>
+        <h2 id="loadingText">클라우드 서버 연결 중...</h2>
+        <p>https://retro-sam5.duckdns.org 에서 데이터를 가져오고 있습니다.</p>
     </div>
 
     <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
 
     <div id="hidden-controls">
-        <button id="runBtn"></button>
-        <button id="fullScreenBtn"></button>
-        <button id="extractBtn"></button>
-        <input type="checkbox" id="SoundToggle" checked>
-        <input type="checkbox" id="soundToggle" checked>
-        <input type="file" id="uploadBtn">
-        <input type="file" id="file">
-        <input type="file" id="openfile">
-        <div id="status"></div>
-        <div id="output"></div>
-        <div id="spinner"></div>
-        <progress id="progress" value="0" max="100"></progress>
-        <div id="dropzone"></div>
+        <button id="runBtn"></button><button id="fullScreenBtn"></button><button id="extractBtn"></button>
+        <input type="checkbox" id="SoundToggle" checked><input type="checkbox" id="soundToggle" checked>
+        <input type="file" id="uploadBtn"><input type="file" id="file"><input type="file" id="openfile">
+        <div id="status"></div><div id="output"></div><div id="spinner"></div>
+        <progress id="progress" value="0" max="100"></progress><div id="dropzone"></div>
     </div>
 
     <script>
-        var myRunDependencies = 0;
-
-        var Module = {
-            canvas: document.getElementById("canvas"),
-            noInitialRun: true, // 파일 로딩 전 자동 실행 방지
-            
-            locateFile: function(path) {
-                if (path.endsWith(".wasm") || path.endsWith(".data")) {
-                    return "https://kevodwyer.github.io/boxedwine-examples/" + path;
-                }
-                return path;
-            }
-        };
-
-        // 삭제된 에뮬레이터 함수 복구 (폴리필)
-        Object.defineProperty(Module, 'addRunDependency', {
-            value: function(id) { 
-                myRunDependencies++; 
-                console.log("[시스템] 데이터 수신 중: " + id);
-            },
-            writable: false, configurable: true
-        });
-
-        Object.defineProperty(Module, 'removeRunDependency', {
-            value: function(id) { 
-                myRunDependencies--; 
-                console.log("[시스템] 수신 완료: " + id);
-                
-                if (myRunDependencies === 0) {
-                    var loadingUI = document.getElementById("loadingUI");
-                    if(loadingUI) loadingUI.style.display = "none";
-                    
-                    setTimeout(function() {
-                        console.log("[시스템] 삼국지 5 실행!");
-                        if (Module.callMain) {
-                            Module.callMain(Module.arguments);
-                        }
-                    }, 500);
-                }
-            },
-            writable: false, configurable: true
-        });
-
-        var BoxedWineConfig = {
-            // ★ 드디어 성공한 나만의 보안 서버 주소! ★
+        // 엔진이 실행되기 전에 설정을 미리 '강제 고정'합니다.
+        window.BoxedWineConfig = {
             urlToAppZipFile: "https://retro-sam5.duckdns.org/sam5.zip",
-            
             programExecutable: "SAM5GOLD25_KO_1.10.exe",
             urlToBaseZipFile: "https://kevodwyer.github.io/boxedwine-examples/boxedwine.zip",
             isAutoRun: true
         };
+
+        var myRunDependencies = 0;
+        var Module = {
+            canvas: document.getElementById("canvas"),
+            noInitialRun: true,
+            
+            // 엔진의 필수 함수들을 미리 정의해서 에러를 원천 차단합니다.
+            addRunDependency: function(id) { 
+                myRunDependencies++; 
+                console.log("[로딩] " + id);
+            },
+            removeRunDependency: function(id) { 
+                myRunDependencies--;
+                if (myRunDependencies === 0) {
+                    document.getElementById("loadingUI").style.display = "none";
+                    console.log("[시스템] 로딩 완료! 게임을 시작합니다.");
+                    setTimeout(function() { if (Module.callMain) Module.callMain(Module.arguments); }, 500);
+                }
+            },
+            locateFile: function(path) {
+                return "https://kevodwyer.github.io/boxedwine-examples/" + path;
+            }
+        };
+
+        // 엔진이 설정을 못 찾고 지나가는 것을 방지하기 위해 강제로 덮어씌웁니다.
+        function forceConfig() {
+            if (typeof Config !== 'undefined') {
+                Config.urlToAppZipFile = window.BoxedWineConfig.urlToAppZipFile;
+                Config.programExecutable = window.BoxedWineConfig.programExecutable;
+                Config.isAutoRun = true;
+                console.log("[설정] 클라우드 주소 강제 주입 성공!");
+            } else {
+                setTimeout(forceConfig, 100);
+            }
+        }
+        forceConfig();
     </script>
 
     <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine.js"></script>
