@@ -4,42 +4,16 @@
     <meta charset="UTF-8">
     <title>삼국지5 황금판 웹 실행</title>
     <style>
-        html, body {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background: #000;
-            overflow: hidden;
-            color: white;
-            font-family: sans-serif;
-        }
-
-        #canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        #loadingUI {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            z-index: 999;
-        }
-
-        #hidden-controls {
-            display: none;
-        }
+        html, body { width: 100%; height: 100%; margin: 0; padding: 0; background: #000; overflow: hidden; color: white; font-family: sans-serif; }
+        #canvas { width: 100%; height: 100%; display: block; }
+        #loadingUI { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 999; }
+        #hidden-controls { display: none; }
     </style>
 </head>
 <body>
-
     <div id="loadingUI">
         <h2>삼국지5 황금판 로딩 중...</h2>
-        <p>최초 실행 시 시간이 다소 걸릴 수 있습니다.</p>
+        <p>게임 파일 및 윈도우 시스템을 다운로드하고 있습니다.</p>
     </div>
 
     <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
@@ -61,11 +35,14 @@
     </div>
 
     <script>
+        var myRunDependencies = 0;
+
         var Module = {
             canvas: document.getElementById("canvas"),
-            print: function(text) { console.log(text); },
-            printErr: function(text) { console.error(text); },
-            setStatus: function(text) { console.log("STATUS:", text); },
+            
+            // ★ 핵심 1: 미러 서버의 버그로 인해 게임이 파일 로딩 전에 일찍 켜지는 것을 강제 차단!
+            noInitialRun: true, 
+            
             locateFile: function(path) {
                 if (path.endsWith(".wasm") || path.endsWith(".data")) {
                     return "https://kevodwyer.github.io/boxedwine-examples/" + path;
@@ -73,6 +50,38 @@
                 return path;
             }
         };
+
+        // ★ 핵심 2: 미러 서버에서 삭제된 함수를 우리 HTML에서 직접 재창조하여 이식합니다.
+        Object.defineProperty(Module, 'addRunDependency', {
+            value: function(id) { 
+                myRunDependencies++; 
+                console.log("[시스템] 파일 다운로드 대기 시작: " + id);
+            },
+            writable: false, configurable: true
+        });
+
+        Object.defineProperty(Module, 'removeRunDependency', {
+            value: function(id) { 
+                myRunDependencies--; 
+                console.log("[시스템] 다운로드 완료: " + id);
+                
+                // 모든 파일(boxedwine.zip, sam5.zip) 다운로드가 끝나면 수동으로 게임 엔진에 시동을 겁니다!
+                if (myRunDependencies === 0) {
+                    var loadingUI = document.getElementById("loadingUI");
+                    if(loadingUI) loadingUI.style.display = "none";
+                    
+                    setTimeout(function() {
+                        console.log("[시스템] 메인 엔진 구동 시작!");
+                        if (Module.callMain) {
+                            Module.callMain(Module.arguments);
+                        } else {
+                            console.error("엔진 실행 함수를 찾을 수 없습니다.");
+                        }
+                    }, 500);
+                }
+            },
+            writable: false, configurable: true
+        });
 
         var BoxedWineConfig = {
             urlToAppZipFile: "sam5.zip",
@@ -83,25 +92,7 @@
     </script>
 
     <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine.js"></script>
-
-    <script>
-        if (typeof Module.addRunDependency !== "function") {
-            Module.addRunDependency = function(id) { /* 에러 방지용 빈 함수 */ };
-        }
-        if (typeof Module.removeRunDependency !== "function") {
-            Module.removeRunDependency = function(id) { /* 에러 방지용 빈 함수 */ };
-        }
-    </script>
-
     <script src="https://kevodwyer.github.io/boxedwine-examples/boxedwine-shell.js"></script>
 
-    <script>
-        setTimeout(function () {
-            const loadingUI = document.getElementById("loadingUI");
-            if (loadingUI) {
-                loadingUI.style.display = "none";
-            }
-        }, 8000);
-    </script>
 </body>
 </html>
